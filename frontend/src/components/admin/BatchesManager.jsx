@@ -26,6 +26,7 @@ export default function BatchesManager() {
   const [internships, setInternships] = useState([]);
   const [exams, setExams] = useState([]);
   const [examLoadError, setExamLoadError] = useState('');
+  const [catalogLoadError, setCatalogLoadError] = useState('');
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState(null);
@@ -35,13 +36,15 @@ export default function BatchesManager() {
 
   const load = async () => {
     setLoading(true);
+    setCatalogLoadError('');
+    setExamLoadError('');
     try {
       const [b, c, i, e] = await Promise.all([
         batchApi.getAll(),
-        courseApi.adminGetAll().catch(() => []),
-        internshipApi.adminGetAll().catch(() => []),
+        courseApi.adminGetAll().catch(() => courseApi.getAll()),
+        internshipApi.adminGetAll().catch(() => internshipApi.getAll()),
         examApi.adminGetAll().catch((err) => {
-          setExamLoadError(err.response?.data?.message || 'Assessments could not be loaded');
+          setExamLoadError(err.response?.data?.message || 'Assessments could not be loaded.');
           return [];
         })
       ]);
@@ -49,8 +52,12 @@ export default function BatchesManager() {
       setCourses(c);
       setInternships(i);
       setExams(e);
+      if (!c.length && !i.length) {
+        setCatalogLoadError('No courses or internships are available yet. Create and publish one from the Courses or Internships tab first.');
+      }
     } catch {
       toast.error('Could not load batches');
+      setCatalogLoadError('Could not load the course and internship catalog. Please sign in again, then reopen Batches & Classes.');
     } finally {
       setLoading(false);
     }
@@ -213,6 +220,7 @@ export default function BatchesManager() {
         </div>
 
         <div className="rounded-2xl border border-border p-5 space-y-4">
+          {catalogLoadError ? <p className="rounded-lg bg-amber-500/10 border border-amber-500/30 px-3 py-2 text-xs text-amber-600">{catalogLoadError}</p> : null}
           <div className="grid md:grid-cols-2 gap-4">
             <div><label className={label}>Batch name *</label><input className={input} placeholder="MERN — Batch 12 (Jan 2026)" value={editing.name} onChange={(e) => setEditing({ ...editing, name: e.target.value })} /></div>
             <div><label className={label}>Batch code (auto if blank)</label><input className={`${input} font-mono uppercase`} value={editing.code} onChange={(e) => setEditing({ ...editing, code: e.target.value.toUpperCase() })} /></div>

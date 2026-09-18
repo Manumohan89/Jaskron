@@ -4,12 +4,14 @@
  */
 
 export const COMPANY = {
-  legalName: 'JASKRON Technologies Private Limited',
+  legalName: 'Jaskron Technologies PVT LTD',
   shortName: 'JASKRON',
-  displayName: 'JASKRON Technologies Pvt. Ltd.',
+  displayName: 'Jaskron Technologies PVT LTD',
   tagline: 'Learn | Build | Innovate',
   pillars: ['Technology', 'Skill Development', 'Research', 'Industry Engagement'],
   email: 'jaskronsecureops@gmail.com',
+  instagram: 'https://www.instagram.com/jaskron_secure.ops?stkn=czZyczBmdjYxdG5l',
+  linkedin: 'https://www.linkedin.com/in/jaskron-secure-ops',
   phone: '+91 7338078795',
   city: 'Bengaluru',
   region: 'Karnataka',

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Github, Twitter, Linkedin, Mail, Send, CheckCircle2, Loader2 } from 'lucide-react';
+import { Instagram, Linkedin, Mail, Send, CheckCircle2, Loader2 } from 'lucide-react';
 import { Link } from 'wouter';
 import Logo from './Logo';
 import { COMPANY } from '@/config/company';
@@ -108,18 +108,15 @@ export default function Footer() {
               <Logo size={40} />
               <div>
                 <p className="font-bold text-white text-sm">JASKRON</p>
-                <p className="text-[10px] text-orange-500 uppercase tracking-widest">Technologies Private limited</p>
+                <p className="text-[10px] text-orange-500 uppercase tracking-widest">Technologies PVT LTD</p>
               </div>
             </Link>
             <p className="text-gray-500 text-sm leading-relaxed">
               {COMPANY.mission} Technology · Skill Development · Research · Industry Engagement.
             </p>
             <div className="flex items-center gap-3 mt-4">
-              {[Twitter, Github, Linkedin].map((Icon, i) => (
-                <a key={i} href="#" className="w-8 h-8 rounded-lg bg-gray-800 hover:bg-gray-700 flex items-center justify-center text-gray-400 hover:text-orange-500 transition-all">
-                  <Icon className="w-4 h-4" />
-                </a>
-              ))}
+              <a href={COMPANY.instagram} target="_blank" rel="noreferrer" aria-label="Instagram" className="w-8 h-8 rounded-lg bg-gray-800 hover:bg-gray-700 flex items-center justify-center text-gray-400 hover:text-orange-500 transition-all"><Instagram className="w-4 h-4" /></a>
+              <a href={COMPANY.linkedin} target="_blank" rel="noreferrer" aria-label="LinkedIn" className="w-8 h-8 rounded-lg bg-gray-800 hover:bg-gray-700 flex items-center justify-center text-gray-400 hover:text-orange-500 transition-all"><Linkedin className="w-4 h-4" /></a>
               <a href="mailto:jaskronsecureops@gmail.com" className="w-8 h-8 rounded-lg bg-gray-800 hover:bg-gray-700 flex items-center justify-center text-gray-400 hover:text-orange-500 transition-all">
                 <Mail className="w-4 h-4" />
               </a>

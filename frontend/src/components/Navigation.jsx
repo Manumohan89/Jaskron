@@ -46,8 +46,8 @@ export default function Navigation() {
             </motion.div>
             <div className="hidden sm:block leading-tight">
               <span className="text-foreground font-bold text-sm tracking-wide">JASKRON</span>
-              <span className="text-orange-500 text-[9px] block -mt-0.5 font-medium tracking-[0.18em] uppercase">
-                Technologies
+              <span className="text-orange-500 text-[9px] block -mt-0.5 font-medium tracking-[0.12em] uppercase">
+                Technologies PVT LTD
               </span>
             </div>
           </Link>

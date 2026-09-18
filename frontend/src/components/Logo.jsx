@@ -1,5 +1,5 @@
 /**
- * JASKRON Technologies Pvt. Ltd. brand mark.
+ * JASKRON Technologies PVT LTD brand mark.
  * Uses the official raster logo (hexagon shield mark) shipped in /public.
  * `variant="full"` renders the complete lockup (mark + wordmark).
  */
@@ -8,7 +8,7 @@ export default function Logo({ size = 40, className = '', variant = 'mark' }) {
     return (
       <img
         src="/logo-full.png"
-        alt="JASKRON Technologies Pvt. Ltd."
+        alt="JASKRON Technologies PVT LTD"
         style={{ height: size, width: 'auto' }}
         className={`object-contain select-none ${className}`}
         draggable={false}
