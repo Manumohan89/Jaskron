@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite --host",
-    "build": "vite build",
+    "build": "node -e \"const fs=require('fs'); const p='node_modules/.bin/vite'; try { fs.chmodSync(p, 0o755); } catch (e) {}\" && vite build",
     "preview": "vite preview --host"
   },
   "dependencies": {
