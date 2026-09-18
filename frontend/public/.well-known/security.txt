@@ -1,0 +1,10 @@
+Contact: mailto:jaskronsecureops@gmail.com
+Contact: tel:+917338078795
+Expires: 2027-07-01T00:00:00.000Z
+Preferred-Languages: en, hi, kn
+Canonical: https://jaskron.com/.well-known/security.txt
+Policy: https://jaskron.com/security-policy
+
+# We take security seriously and practice what we teach. If you've found a
+# vulnerability in our systems, please report it to the contact above before
+# any public disclosure. We aim to acknowledge reports within 2 business days.

@@ -1,0 +1,4 @@
+{
+  "nav": { "home": "Home", "about": "About", "services": "Services", "workshops": "Workshops", "team": "Team", "contact": "Contact", "blog": "Blog", "resources": "Resources", "signIn": "Sign In", "getStarted": "Get Started", "dashboard": "Dashboard" },
+  "hero": { "title": "Secure Your Digital Future", "subtitle": "Enterprise-grade cybersecurity training and services from Bengaluru's trusted security team.", "cta": "Explore Workshops" }
+}
