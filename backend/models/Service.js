@@ -25,6 +25,11 @@ const serviceSchema = new Schema({
     type: String,
     default: 'Custom Quote'
   },
+  priceAmount: {
+    type: Number,
+    default: 0,
+    min: 0
+  },
   features: [{
     type: String
   }],

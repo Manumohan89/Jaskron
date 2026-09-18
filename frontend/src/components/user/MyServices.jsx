@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import axios from 'axios';
+import { paymentApi, loadRazorpayScript } from '@/services/paymentService';
 import { Shield, ChevronRight, Loader2, X, CheckCircle, Lock, Eye, Server, Bug, Cloud, Database, Wifi } from 'lucide-react';
 
 const API_URL = import.meta.env?.VITE_API_URL || 'http://localhost:5000';
@@ -44,17 +45,53 @@ export default function MyServices({ headers, user }) {
     setForm({ name: user?.name || '', email: user?.email || '', phone: '', message: '' });
   };
 
+  const payForRequest = async (request) => {
+    setSubmitting(true);
+    try {
+      const loaded = await loadRazorpayScript();
+      if (!loaded) throw new Error('Payment checkout could not load');
+      const order = await paymentApi.createServiceOrder(request._id);
+      const razorpay = new window.Razorpay({
+        key: order.keyId,
+        amount: order.amount,
+        currency: order.currency,
+        order_id: order.orderId,
+        name: 'Jaskron Technologies PVT LTD',
+        description: order.serviceTitle,
+        prefill: { name: user?.name, email: user?.email },
+        handler: async (response) => {
+          try {
+            await paymentApi.verifyServicePayment(request._id, response);
+            setSubmitted(true);
+            await fetchAll();
+          } catch (err) {
+            alert(err.response?.data?.message || 'Payment verification failed');
+          } finally {
+            setSubmitting(false);
+          }
+        },
+        modal: { ondismiss: () => setSubmitting(false) },
+        theme: { color: '#EA580C' }
+      });
+      razorpay.open();
+    } catch (err) {
+      alert(err.response?.data?.message || err.message || 'Could not start payment');
+      setSubmitting(false);
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setSubmitting(true);
     try {
-      await axios.post(`${API_URL}/api/services/${requestTarget._id}/request`, form, { headers });
-      setSubmitted(true);
-      await fetchAll();
+      const { request } = (await axios.post(`${API_URL}/api/services/${requestTarget._id}/request`, form, { headers })).data;
+      await payForRequest(request);
+      return;
     } catch (err) {
-      alert(err.response?.data?.error || 'Failed to submit request');
+      alert(err.response?.data?.error || err.response?.data?.message || err.message || 'Failed to submit request');
+    } finally {
+      setSubmitting(false);
     }
-    setSubmitting(false);
   };
 
   if (isLoading) {
@@ -77,7 +114,8 @@ export default function MyServices({ headers, user }) {
         ) : (
           services.map((s) => {
             const Icon = ICON_MAP[s.icon] || Shield;
-            const requested = hasRequested(s._id);
+            const request = myRequests.find((r) => r.service?._id === s._id);
+            const requested = Boolean(request);
             return (
               <motion.div
                 key={s._id}
@@ -100,9 +138,11 @@ export default function MyServices({ headers, user }) {
                 <div className="flex items-center justify-between mt-4">
                   <span className="text-orange-500 text-sm font-semibold">{s.price}</span>
                   {requested ? (
-                    <span className="text-xs text-emerald-400 flex items-center gap-1">
-                      <CheckCircle className="w-3.5 h-3.5" /> Requested
-                    </span>
+                    request.paymentStatus === 'paid' ? (
+                      <span className="text-xs text-emerald-400 flex items-center gap-1"><CheckCircle className="w-3.5 h-3.5" /> Paid — in queue</span>
+                    ) : (
+                      <button onClick={() => payForRequest(request)} disabled={submitting} className="text-xs text-amber-400 hover:text-amber-300">Pay now</button>
+                    )
                   ) : (
                     <button
                       onClick={() => openRequest(s)}

@@ -1,4 +1,4 @@
-# JASKRON Secure Ops
+# Jaskron Technologies PVT LTD
 
 A full-stack cybersecurity training & awareness platform — public marketing site,
 user dashboard, and a full admin control panel — built with **React (JSX) + Vite**

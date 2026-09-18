@@ -108,7 +108,7 @@ export default function Footer() {
               <Logo size={40} />
               <div>
                 <p className="font-bold text-white text-sm">JASKRON</p>
-                <p className="text-[10px] text-orange-500 uppercase tracking-widest">Secure Ops</p>
+                <p className="text-[10px] text-orange-500 uppercase tracking-widest">Technologies Private limited</p>
               </div>
             </Link>
             <p className="text-gray-500 text-sm leading-relaxed">

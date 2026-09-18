@@ -45,12 +45,12 @@ export async function getContactById(req, res) {
 // Create contact (submit form) — public
 export async function createContact(req, res) {
   try {
-    const { name, email, subject, message } = req.body;
+    const { name, email, phone, organization, subject, message } = req.body;
     if (!name || !email || !subject || !message) {
       res.status(400).json({ error: 'All fields are required' });
       return;
     }
-    const contact = new Contact({ name, email, subject, message });
+    const contact = new Contact({ name, email, phone, organization, subject, message });
     await contact.save();
 
     const admins = await User.find({ role: 'admin' });

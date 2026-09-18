@@ -18,6 +18,14 @@ export const paymentApi = {
     const response = await apiClient.post(`/api/payments/internships/${applicationId}/verify`, payload);
     return response.data;
   },
+  createServiceOrder: async (requestId) => {
+    const response = await apiClient.post(`/api/payments/services/${requestId}/order`);
+    return response.data;
+  },
+  verifyServicePayment: async (requestId, payload) => {
+    const response = await apiClient.post(`/api/payments/services/${requestId}/verify`, payload);
+    return response.data;
+  },
 
   createCourseOrder: async (courseId) => {
     const response = await apiClient.post(`/api/payments/courses/${courseId}/order`);

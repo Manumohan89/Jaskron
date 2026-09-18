@@ -1,6 +1,6 @@
 # JASKRON Technologies Pvt. Ltd. — Rebuild Notes
 
-This documents the conversion of the old **JASKRON Secure Ops** cybersecurity site into the
+This documents the conversion of the old cybersecurity site into the
 **JASKRON Technologies Private Limited** company website, plus the new LMS.
 
 ---

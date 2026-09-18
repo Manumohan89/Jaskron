@@ -5,7 +5,7 @@ import { Shield, Plus, Edit2, Trash2, X, Loader2, Inbox, Mail, Phone } from 'luc
 
 const API_URL = import.meta.env?.VITE_API_URL || 'http://localhost:5000';
 const ICONS = ['Shield', 'Lock', 'Zap', 'Eye', 'Code2', 'Users', 'AlertCircle', 'BookOpen'];
-const REQUEST_STATUSES = ['pending', 'contacted', 'in-progress', 'completed', 'rejected'];
+const REQUEST_STATUSES = ['payment_pending', 'pending', 'contacted', 'in-progress', 'completed', 'rejected'];
 
 const emptyForm = {
   title: '',
@@ -13,6 +13,7 @@ const emptyForm = {
   icon: 'Shield',
   category: 'Security',
   price: 'Custom Quote',
+  priceAmount: 0,
   image: '',
   features: ''
 };
@@ -61,6 +62,7 @@ export default function ServicesManager({ headers }) {
       icon: s.icon || 'Shield',
       category: s.category || 'Security',
       price: s.price || 'Custom Quote',
+      priceAmount: s.priceAmount || 0,
       image: s.image || '',
       features: (s.features || []).join(', ')
     });
@@ -108,6 +110,7 @@ export default function ServicesManager({ headers }) {
   };
 
   const statusColor = {
+    payment_pending: 'bg-amber-500/10 text-amber-400 border-amber-500/30',
     pending: 'bg-amber-500/10 text-amber-400 border-amber-500/30',
     contacted: 'bg-orange-600/10 text-orange-500 border-orange-600/30',
     'in-progress': 'bg-orange-500/10 text-orange-500 border-orange-500/30',
@@ -285,6 +288,17 @@ export default function ServicesManager({ headers }) {
                       value={form.category}
                       onChange={(e) => setForm({ ...form, category: e.target.value })}
                       className="w-full bg-[#161616] border border-gray-800 rounded-xl px-3 py-2.5 text-sm text-white focus:outline-none focus:border-orange-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-xs font-medium text-gray-400 mb-1.5 block">Payment amount (INR)</label>
+                    <input
+                      type="number"
+                      min="0"
+                      value={form.priceAmount}
+                      onChange={(e) => setForm({ ...form, priceAmount: e.target.value })}
+                      className="w-full bg-[#161616] border border-gray-800 rounded-xl px-3 py-2.5 text-sm text-white focus:outline-none focus:border-orange-500"
+                      placeholder="Required before service delivery"
                     />
                   </div>
                   <div>

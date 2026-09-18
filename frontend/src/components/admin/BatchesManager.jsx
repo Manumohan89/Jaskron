@@ -25,6 +25,7 @@ export default function BatchesManager() {
   const [courses, setCourses] = useState([]);
   const [internships, setInternships] = useState([]);
   const [exams, setExams] = useState([]);
+  const [examLoadError, setExamLoadError] = useState('');
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState(null);
@@ -39,7 +40,10 @@ export default function BatchesManager() {
         batchApi.getAll(),
         courseApi.adminGetAll().catch(() => []),
         internshipApi.adminGetAll().catch(() => []),
-        examApi.adminGetAll().catch(() => [])
+        examApi.adminGetAll().catch((err) => {
+          setExamLoadError(err.response?.data?.message || 'Assessments could not be loaded');
+          return [];
+        })
       ]);
       setBatches(b);
       setCourses(c);
@@ -245,6 +249,11 @@ export default function BatchesManager() {
                 <option value="">None yet</option>
                 {exams.map((e) => <option key={e._id} value={e._id}>{e.title} ({e.examCode})</option>)}
               </select>
+              {examLoadError ? (
+                <p className="text-xs text-red-500 mt-1">{examLoadError}</p>
+              ) : exams.length === 0 ? (
+                <p className="text-xs text-muted-foreground mt-1">Create an assessment in the Exams tab, then reopen this batch.</p>
+              ) : null}
             </div>
           </div>
 

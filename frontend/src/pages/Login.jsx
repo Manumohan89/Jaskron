@@ -102,7 +102,7 @@ export default function Login() {
             <Logo size={40} />
             <div>
               <p className="font-bold text-white text-sm leading-none">JASKRON</p>
-              <p className="text-[10px] text-orange-500 uppercase tracking-widest">Secure Ops</p>
+              <p className="text-[10px] text-orange-500 uppercase tracking-widest">Jaskron Technologies PVT LTD</p>
             </div>
           </Link>
 

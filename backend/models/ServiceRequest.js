@@ -25,9 +25,17 @@ const serviceRequestSchema = new Schema({
   message: {
     type: String
   },
+  paymentStatus: {
+    type: String,
+    enum: ['pending', 'paid', 'waived'],
+    default: 'pending'
+  },
+  paidAt: { type: Date },
+  razorpayOrderId: { type: String, default: '' },
+  razorpayPaymentId: { type: String, default: '' },
   status: {
     type: String,
-    enum: ['pending', 'contacted', 'in-progress', 'completed', 'rejected'],
+    enum: ['payment_pending', 'pending', 'contacted', 'in-progress', 'completed', 'rejected'],
     default: 'pending'
   }
 }, {

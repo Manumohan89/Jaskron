@@ -1,6 +1,12 @@
 import { Service } from '../models/Service.js';
 import { ServiceRequest } from '../models/ServiceRequest.js';
 
+export function serviceAmount(service) {
+  if (Number(service.priceAmount) > 0) return Number(service.priceAmount);
+  const match = String(service.price || '').replace(/,/g, '').match(/\d+(?:\.\d+)?/);
+  return match ? Number(match[0]) : 0;
+}
+
 // Get all services
 export async function getServices(_req, res) {
   try {
@@ -76,6 +82,10 @@ export async function requestService(req, res) {
     if (!service) {
       return res.status(404).json({ error: 'Service not found' });
     }
+    const amount = serviceAmount(service);
+    if (!amount) {
+      return res.status(400).json({ error: 'This service has no payable amount configured yet. Please contact the administrator.' });
+    }
     const { name, email, phone, message } = req.body;
     const request = new ServiceRequest({
       service: service._id,
@@ -83,10 +93,11 @@ export async function requestService(req, res) {
       name: name || req.user.name,
       email: email || req.user.email,
       phone,
-      message
+      message,
+      status: 'payment_pending'
     });
     await request.save();
-    res.status(201).json({ message: 'Service request submitted', request });
+    res.status(201).json({ message: 'Request created. Payment is required before service delivery.', request, amount });
   } catch (error) {
     res.status(500).json({ error: 'Failed to submit service request' });
   }
@@ -121,10 +132,15 @@ export async function getAllServiceRequests(_req, res) {
 export async function updateServiceRequestStatus(req, res) {
   try {
     const { status } = req.body;
-    const request = await ServiceRequest.findByIdAndUpdate(req.params.id, { status }, { new: true });
-    if (!request) {
-      return res.status(404).json({ error: 'Service request not found' });
+    if (!['payment_pending', 'pending', 'contacted', 'in-progress', 'completed', 'rejected'].includes(status)) {
+      return res.status(400).json({ error: 'Invalid service request status' });
     }
+    const existing = await ServiceRequest.findById(req.params.id);
+    if (!existing) return res.status(404).json({ error: 'Service request not found' });
+    if (['contacted', 'in-progress', 'completed'].includes(status) && !['paid', 'waived'].includes(existing.paymentStatus)) {
+      return res.status(400).json({ error: 'Payment must be confirmed before service delivery starts' });
+    }
+    const request = await ServiceRequest.findByIdAndUpdate(req.params.id, { status }, { new: true });
     res.json(request);
   } catch (error) {
     res.status(500).json({ error: 'Failed to update service request' });

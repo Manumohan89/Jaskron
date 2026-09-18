@@ -44,6 +44,8 @@ export const resendOtpSchema = z.object({
 export const contactSchema = z.object({
   name: z.string().trim().min(2).max(100),
   email: z.string().trim().email().toLowerCase(),
+  phone: z.string().trim().max(30).optional().or(z.literal('')),
+  organization: z.string().trim().max(200).optional().or(z.literal('')),
   subject: z.string().trim().min(2).max(200),
   message: z.string().trim().min(5).max(5000)
 });

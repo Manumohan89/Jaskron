@@ -146,7 +146,7 @@ export default function UserDashboard() {
             <Logo size={40} />
             <div>
               <p className="font-bold text-sm text-white">JASKRON</p>
-              <p className="text-xs text-gray-400">Secure Ops</p>
+              <p className="text-xs text-gray-400">Jaskron Technologies PVT LTD</p>
             </div>
           </div>
           <button onClick={() => setSidebarOpen(false)} className="md:hidden p-1.5 text-gray-500 hover:text-white">

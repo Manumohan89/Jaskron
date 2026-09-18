@@ -8,6 +8,9 @@ import { Internship } from '../models/Internship.js';
 import { Course } from '../models/Course.js';
 import { Enrollment } from '../models/Enrollment.js';
 import { Batch } from '../models/Batch.js';
+import { Service } from '../models/Service.js';
+import { ServiceRequest } from '../models/ServiceRequest.js';
+import { serviceAmount } from '../controllers/serviceController.js';
 import { notifyUser } from '../utils/notify.js';
 
 const router = Router();
@@ -25,6 +28,50 @@ function signatureValid(orderId, paymentId, signature) {
     .digest('hex');
   return expected === signature;
 }
+
+// Create a Razorpay order for a service request. Service delivery is unlocked only after verification.
+router.post('/services/:requestId/order', authenticate, async (req, res) => {
+  try {
+    const razorpay = getRazorpay();
+    if (!razorpay) return res.status(503).json({ message: 'Payments are not configured on this server yet.' });
+    const request = await ServiceRequest.findById(req.params.requestId).populate('service');
+    if (!request) return res.status(404).json({ message: 'Service request not found' });
+    if (String(request.user) !== String(req.user.id)) return res.status(403).json({ message: 'This is not your service request' });
+    if (request.paymentStatus === 'paid') return res.status(400).json({ message: 'This service request is already paid for' });
+    const amount = serviceAmount(request.service);
+    if (!amount) return res.status(400).json({ message: 'No payment amount is configured for this service' });
+    const order = await razorpay.orders.create({
+      amount: Math.round(amount * 100),
+      currency: 'INR',
+      receipt: `service_${request._id}`,
+      notes: { requestId: request._id.toString(), userId: req.user.id }
+    });
+    res.json({ orderId: order.id, amount: order.amount, currency: order.currency, keyId: process.env.RAZORPAY_KEY_ID, serviceTitle: request.service.title });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
+router.post('/services/:requestId/verify', authenticate, async (req, res) => {
+  try {
+    const { razorpay_order_id, razorpay_payment_id, razorpay_signature } = req.body;
+    if (!signatureValid(razorpay_order_id, razorpay_payment_id, razorpay_signature)) {
+      return res.status(400).json({ message: 'Payment verification failed' });
+    }
+    const request = await ServiceRequest.findById(req.params.requestId).populate('service', 'title');
+    if (!request) return res.status(404).json({ message: 'Service request not found' });
+    if (String(request.user) !== String(req.user.id)) return res.status(403).json({ message: 'This is not your service request' });
+    request.paymentStatus = 'paid';
+    request.paidAt = new Date();
+    request.razorpayOrderId = razorpay_order_id;
+    request.razorpayPaymentId = razorpay_payment_id;
+    request.status = 'pending';
+    await request.save();
+    res.json({ message: 'Payment verified. Our team can now begin this service.', request });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
 
 // Create a Razorpay order for a paid workshop registration
 router.post('/workshops/:id/order', authenticate, async (req, res) => {

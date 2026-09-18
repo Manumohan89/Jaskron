@@ -57,8 +57,8 @@ export default function ContactSection() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!formData.name || !formData.email || !formData.topic) {
-      toast.error('Please fill in your name, email, and what this is about');
+    if (!formData.name || !formData.email || !formData.topic || formData.message.trim().length < 5) {
+      toast.error('Please fill in your name, email, topic, and at least 5 characters of detail');
       return;
     }
     setIsSubmitting(true);
@@ -67,8 +67,10 @@ export default function ContactSection() {
       await contactApi.submit({
         name: formData.name,
         email: formData.email,
+        phone: formData.phone,
+        organization: formData.organization,
         subject: `${topicLabel} — website enquiry`,
-        message: `Phone: ${formData.phone || '—'}\nOrganization: ${formData.organization || '—'}\n\n${formData.message}`
+        message: formData.message.trim()
       });
       setSent(true);
       toast.success("Thanks — we'll get back to you shortly.");
@@ -147,6 +149,7 @@ export default function ContactSection() {
                     name="message"
                     value={formData.message}
                     onChange={handleChange}
+                    required
                     placeholder="Tell us a bit more — timelines, batch size, or anything specific you need."
                     rows={4}
                     className={`${inputClass} resize-none`}

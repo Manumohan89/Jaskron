@@ -11,6 +11,16 @@ const contactSchema = new Schema({
     lowercase: true,
     trim: true
   },
+  phone: {
+    type: String,
+    trim: true,
+    default: ''
+  },
+  organization: {
+    type: String,
+    trim: true,
+    default: ''
+  },
   subject: {
     type: String,
     required: true,
