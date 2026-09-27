@@ -27,3 +27,9 @@ services:
         sync: false
       - key: EMAIL_FROM
         sync: false
+      - key: SMTP_HOST
+        value: smtpout.secureserver.net
+      - key: SMTP_PORT
+        value: "465"
+      - key: SMTP_SECURE
+        value: "true"

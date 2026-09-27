@@ -54,12 +54,16 @@ export const register = async (req, res) => {
         return res.status(200).json({ token, refreshToken, user: { id: existing._id, name: existing.name, email: existing.email, role: existing.role } });
       }
       const otp = generateOtp();
+      try {
+        await sendMail({ to: existing.email, subject: 'Verify your email — JASKRON Technologies Pvt. Ltd.', html: otpVerificationEmail(existing.name, otp) });
+      } catch (mailError) {
+        return res.status(503).json({ message: 'We could not send the verification email. Please try again later.', code: 'EMAIL_SEND_FAILED', email: existing.email });
+      }
       existing.emailVerified = false;
       existing.otpCodeHash = hashOtp(otp);
       existing.otpExpires = new Date(Date.now() + 10 * 60 * 1000);
       existing.otpAttempts = 0;
       await existing.save();
-      await sendMail({ to: existing.email, subject: 'Verify your email — JASKRON Technologies Pvt. Ltd.', html: otpVerificationEmail(existing.name, otp) });
       return res.status(200).json({ pendingVerification: true, email: existing.email });
     }
 
@@ -71,8 +75,12 @@ export const register = async (req, res) => {
       otpExpires: otpBypassEnabled() ? undefined : new Date(Date.now() + 10 * 60 * 1000)
     });
     if (!otpBypassEnabled()) {
+      try {
+        await sendMail({ to: user.email, subject: 'Verify your email — JASKRON Technologies Pvt. Ltd.', html: otpVerificationEmail(user.name, otp) });
+      } catch (mailError) {
+        return res.status(503).json({ message: 'We could not send the verification email. Please try again later.', code: 'EMAIL_SEND_FAILED', email: user.email });
+      }
       await user.save();
-      await sendMail({ to: user.email, subject: 'Verify your email — JASKRON Technologies Pvt. Ltd.', html: otpVerificationEmail(user.name, otp) });
       return res.status(201).json({ pendingVerification: true, email: user.email });
     }
     user.lastLogin = new Date();
