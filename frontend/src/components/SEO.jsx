@@ -11,7 +11,7 @@ const organizationLd = {
   url: SITE_URL,
   logo: `${SITE_URL}/pwa-512x512.png`,
   email: 'jaskronsecureops@gmail.com',
-  telephone: '+91-7338078795',
+  telephone: '+91-7619646464',
   address: {
     '@type': 'PostalAddress',
     addressLocality: 'Bengaluru',

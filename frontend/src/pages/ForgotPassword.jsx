@@ -28,8 +28,8 @@ export default function ForgotPassword() {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-background text-foreground px-6 relative overflow-hidden">
-      <div className="absolute inset-0 bg-cover bg-center opacity-[0.08] dark:opacity-[0.12]" style={{ backgroundImage: "url('https://images.unsplash.com/photo-1614064641938-3bbee52942c7?fm=jpg&q=80&w=1600&auto=format&fit=crop')" }} />
-      <div className="absolute inset-0 grid-bg opacity-10" />
+      <div className="absolute inset-0 pointer-events-none bg-cover bg-center opacity-[0.08] dark:opacity-[0.12]" style={{ backgroundImage: "url('https://images.unsplash.com/photo-1614064641938-3bbee52942c7?fm=jpg&q=80&w=1600&auto=format&fit=crop')" }} />
+      <div className="absolute inset-0 pointer-events-none grid-bg opacity-10" />
       <SEO title="Forgot Password" path="/forgot-password" />
       <div className="absolute top-5 left-6">
         <Link href="/login" className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-orange-500 transition-colors">

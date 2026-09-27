@@ -90,7 +90,7 @@ export function AuthProvider({ children }) {
 
   const register = async (name, email, password, extra = {}) => {
     const { data } = await axios.post(`${API_URL}/api/auth/register`, { name, email, password, ...extra });
-    // Registration logs the user straight in — no OTP step.
+    if (data.pendingVerification) return data;
     localStorage.setItem('token', data.token);
     localStorage.setItem('refreshToken', data.refreshToken);
     axios.defaults.headers.common['Authorization'] = `Bearer ${data.token}`;

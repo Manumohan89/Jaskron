@@ -19,3 +19,9 @@ services:
         generateValue: true
       - key: CLOUDINARY_URL
         sync: false
+      - key: EMAIL_USER
+        sync: false
+      - key: EMAIL_PASS
+        sync: false
+      - key: EMAIL_FROM
+        sync: false

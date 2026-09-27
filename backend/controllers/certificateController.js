@@ -1,6 +1,7 @@
 import { Certificate } from '../models/Certificate.js';
 import { User } from '../models/User.js';
 import { Workshop } from '../models/Workshop.js';
+import { Course } from '../models/Course.js';
 import { sendMail, certificateIssuedEmail } from '../utils/email.js';
 import { notifyUser } from '../utils/notify.js';
 
@@ -8,16 +9,18 @@ import { notifyUser } from '../utils/notify.js';
 export async function generateCertificate(req, res) {
   try {
     const {
-      userId, courseTitle, workshop, grade, issuedBy,
+      userId, courseId, courseTitle, workshop, grade, issuedBy,
       performanceScore, attendancePercent, durationLabel, mentorRemarks
     } = req.body;
-    if (!userId || !courseTitle) {
-      return res.status(400).json({ error: 'userId and courseTitle are required' });
+    if (!userId || (!courseId && !courseTitle)) {
+      return res.status(400).json({ error: 'userId and a course are required' });
     }
     const user = await User.findById(userId);
     if (!user) {
       return res.status(404).json({ error: 'User not found' });
     }
+    const course = courseId ? await Course.findById(courseId).select('title') : null;
+    if (courseId && !course) return res.status(404).json({ error: 'Course not found' });
 
     // Paid workshops (item 9): certificates only issue after payment is confirmed
     if (workshop) {
@@ -40,11 +43,12 @@ export async function generateCertificate(req, res) {
       certificateId,
       user: user._id,
       recipientName: user.name,
-      courseTitle,
+      courseTitle: course?.title || courseTitle,
       workshop: workshop || undefined,
       grade: grade || 'Pass',
       issuedBy: issuedBy || 'JASKRON Technologies Pvt. Ltd.',
       programType: workshop ? 'workshop' : 'other',
+      course: course?._id,
       durationLabel: durationLabel || '',
       mentorRemarks: mentorRemarks || '',
       performanceScore: performanceScore !== undefined && performanceScore !== '' ? Number(performanceScore) : undefined,
@@ -52,7 +56,7 @@ export async function generateCertificate(req, res) {
     });
     await certificate.save();
 
-    sendMail({
+    const emailResult = await sendMail({
       to: user.email,
       subject: 'Your certificate is ready',
       html: certificateIssuedEmail(user.name, certificate)
@@ -64,7 +68,7 @@ export async function generateCertificate(req, res) {
       link: '/dashboard'
     });
 
-    res.status(201).json(certificate);
+    res.status(201).json({ ...certificate.toObject(), emailSent: Boolean(emailResult?.messageId) });
   } catch (error) {
     res.status(500).json({ error: 'Failed to generate certificate' });
   }

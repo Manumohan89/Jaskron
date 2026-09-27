@@ -3,6 +3,7 @@ import { Certificate } from '../models/Certificate.js';
 import { Exam } from '../models/Exam.js';
 import { User } from '../models/User.js';
 import { notifyUser } from '../utils/notify.js';
+import { sendMail, certificateIssuedEmail } from '../utils/email.js';
 
 /* ------------------------------ student views ------------------------------ */
 
@@ -358,6 +359,12 @@ export async function issueMemberCertificate(req, res) {
       grade: req.body.grade || Certificate.gradeForScore(score)
     });
 
+    const emailResult = await sendMail({
+      to: user.email,
+      subject: 'Your certificate is ready',
+      html: certificateIssuedEmail(user.name || user.email, certificate)
+    });
+
     member.certificate = certificate._id;
     member.performanceScore = Number(score);
     member.status = 'completed';
@@ -375,7 +382,7 @@ export async function issueMemberCertificate(req, res) {
       /* best effort */
     }
 
-    res.status(201).json({ message: 'Certificate issued', certificate });
+    res.status(201).json({ message: 'Certificate issued', certificate, emailSent: Boolean(emailResult?.messageId) });
   } catch (error) {
     res.status(500).json({ message: error.message || 'Failed to issue certificate' });
   }
@@ -434,18 +441,26 @@ export async function issueBatchCertificates(req, res) {
         grade: Certificate.gradeForScore(score)
       });
 
+      // Delivery is best effort so one failed mailbox does not stop the batch.
+      // eslint-disable-next-line no-await-in-loop
+      const emailResult = await sendMail({
+        to: user.email,
+        subject: 'Your certificate is ready',
+        html: certificateIssuedEmail(user.name || user.email, certificate)
+      });
+
       member.certificate = certificate._id;
       member.status = 'completed';
-      issued.push(certificate);
+      issued.push({ certificate, emailSent: Boolean(emailResult?.messageId) });
     }
 
     await batch.save();
 
     await Promise.allSettled(
-      issued.map((c) =>
-        notifyUser(c.user, {
+      issued.map(({ certificate }) =>
+        notifyUser(certificate.user, {
           title: 'Certificate issued',
-          message: `Your certificate for ${c.courseTitle} is ready (${c.grade}).`,
+          message: `Your certificate for ${certificate.courseTitle} is ready.`,
           type: 'certificate',
           link: '/dashboard?tab=certificates'
         })
@@ -455,6 +470,7 @@ export async function issueBatchCertificates(req, res) {
     res.json({
       message: `Issued ${issued.length} certificate(s), skipped ${skipped.length}`,
       issued: issued.length,
+      emailsSent: issued.filter((item) => item.emailSent).length,
       skipped
     });
   } catch (error) {

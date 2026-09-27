@@ -33,6 +33,7 @@ export default function BatchesManager() {
   const [saving, setSaving] = useState(false);
   const [manage, setManage] = useState(null); // batch being managed (roster + sessions)
   const [tab, setTab] = useState('roster');
+  const [batchFilters, setBatchFilters] = useState({ course: '', date: '' });
 
   const load = async () => {
     setLoading(true);
@@ -66,6 +67,12 @@ export default function BatchesManager() {
   useEffect(() => {
     load();
   }, []);
+
+  const visibleBatches = batches.filter((batch) => {
+    const matchesCourse = !batchFilters.course || String(batch.course?._id || batch.course || batch.internship?._id || batch.internship) === batchFilters.course;
+    const matchesDate = !batchFilters.date || dateVal(batch.startDate) === batchFilters.date;
+    return matchesCourse && matchesDate;
+  });
 
   const reloadManaged = async (id) => {
     try {
@@ -149,7 +156,7 @@ export default function BatchesManager() {
     if (!window.confirm('Issue certificates to every scored member who does not already have one?')) return;
     try {
       const res = await batchApi.issueAllCertificates(manage._id);
-      toast.success(res.message);
+      toast.success(`${res.message}${res.emailsSent !== undefined ? ` · ${res.emailsSent} email(s) sent` : ''}`);
       reloadManaged(manage._id);
     } catch (err) {
       toast.error(err.response?.data?.message || 'Bulk issue failed');
@@ -535,7 +542,16 @@ export default function BatchesManager() {
           No batches yet. Create one to start scheduling classes and issuing certificates.
         </p>
       ) : (
-        <div className="overflow-x-auto rounded-2xl border border-border">
+        <>
+          <div className="flex flex-wrap gap-3">
+            <select value={batchFilters.course} onChange={(e) => setBatchFilters({ ...batchFilters, course: e.target.value })} className="px-3 py-2 rounded-xl border border-border bg-background text-sm">
+              <option value="">All courses and internships</option>
+              {courses.map((course) => <option key={course._id} value={course._id}>{course.title}</option>)}
+              {internships.map((internship) => <option key={internship._id} value={internship._id}>{internship.title}</option>)}
+            </select>
+            <input type="date" value={batchFilters.date} onChange={(e) => setBatchFilters({ ...batchFilters, date: e.target.value })} className="px-3 py-2 rounded-xl border border-border bg-background text-sm" />
+          </div>
+          <div className="overflow-x-auto rounded-2xl border border-border">
           <table className="w-full text-sm">
             <thead className="bg-muted/50 text-left">
               <tr>
@@ -549,7 +565,7 @@ export default function BatchesManager() {
               </tr>
             </thead>
             <tbody className="divide-y divide-border">
-              {batches.map((b) => {
+              {visibleBatches.map((b) => {
                 const approved = (b.members || []).filter((m) => m.assessmentApproved).length;
                 return (
                   <tr key={b._id} className="hover:bg-muted/30">
@@ -585,7 +601,8 @@ export default function BatchesManager() {
               })}
             </tbody>
           </table>
-        </div>
+          </div>
+        </>
       )}
     </div>
   );

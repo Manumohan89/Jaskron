@@ -12,7 +12,7 @@ export const COMPANY = {
   email: 'jaskronsecureops@gmail.com',
   instagram: 'https://www.instagram.com/jaskron_secure.ops?stkn=czZyczBmdjYxdG5l',
   linkedin: 'https://www.linkedin.com/in/jaskron-secure-ops',
-  phone: '+91 7338078795',
+  phone: '+91 7619646464',
   city: 'Bengaluru',
   region: 'Karnataka',
   country: 'India',

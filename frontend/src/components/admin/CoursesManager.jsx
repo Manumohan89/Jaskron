@@ -599,7 +599,7 @@ export default function CoursesManager() {
             ) : (
               <table className="w-full text-sm">
                 <thead className="text-left text-xs text-muted-foreground border-b border-border">
-                  <tr><th className="py-2">Learner</th><th>Progress</th><th>Status</th></tr>
+                  <tr><th className="py-2">Learner</th><th>Enrolled</th><th>Payment</th><th>Progress</th><th>Status</th></tr>
                 </thead>
                 <tbody className="divide-y divide-border">
                   {roster.enrollments.map((e) => (
@@ -608,6 +608,8 @@ export default function CoursesManager() {
                         <p className="font-medium">{e.user?.name || '—'}</p>
                         <p className="text-xs text-muted-foreground">{e.user?.email}</p>
                       </td>
+                      <td className="text-xs text-muted-foreground">{e.enrolledAt ? new Date(e.enrolledAt).toLocaleDateString() : '—'}</td>
+                      <td className="text-xs capitalize text-muted-foreground">{String(e.paymentStatus || '').replace('_', ' ') || '—'}</td>
                       <td>{e.progressPercent}%</td>
                       <td className="capitalize text-muted-foreground">{e.status}</td>
                     </tr>

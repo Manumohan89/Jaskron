@@ -25,9 +25,9 @@ const TOPICS = [
 
 const CONTACT_METHODS = [
   { icon: Mail, label: 'Email', value: COMPANY.email, href: `mailto:${COMPANY.email}` },
-  { icon: Phone, label: 'Call Us — Executive Chair', value: '+91 7338078795', href: 'tel:+917338078795' },
+  { icon: Phone, label: 'Call Us', value: COMPANY.phone, href: `tel:${COMPANY.phone.replace(/\D/g, '')}` },
   { icon: Phone, label: 'Call Us — Technical Manager', value: '+91 7349012319', href: 'tel:+917349012319' },
-  { icon: MessageCircle, label: 'WhatsApp', value: '+91 7338078795', href: 'https://wa.me/917338078795' },
+  { icon: MessageCircle, label: 'WhatsApp', value: COMPANY.phone, href: `https://wa.me/${COMPANY.phone.replace(/\D/g, '')}` },
   { icon: MapPin, label: 'Location', value: `${COMPANY.city}, ${COMPANY.region}, ${COMPANY.country}`, href: '#' }
 ];
 

@@ -24,6 +24,14 @@ export default function LoginOtp() {
 
   const handleChange = (i, val) => {
     if (!/^\d*$/.test(val)) return;
+    if (val.length > 1) {
+      const pasted = val.slice(0, 6).split('');
+      while (pasted.length < 6) pasted.push('');
+      setDigits(pasted);
+      setError('');
+      inputsRef.current[Math.min(val.length, 6) - 1]?.focus();
+      return;
+    }
     const next = [...digits];
     next[i] = val.slice(-1);
     setDigits(next);
@@ -63,8 +71,8 @@ export default function LoginOtp() {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-background text-foreground px-6 relative overflow-hidden">
-      <div className="absolute inset-0 bg-cover bg-center opacity-[0.08] dark:opacity-[0.12]" style={{ backgroundImage: "url('https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?fm=jpg&q=80&w=1600&auto=format&fit=crop')" }} />
-      <div className="absolute inset-0 grid-bg opacity-10" />
+      <div className="absolute inset-0 pointer-events-none bg-cover bg-center opacity-[0.08] dark:opacity-[0.12]" style={{ backgroundImage: "url('https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?fm=jpg&q=80&w=1600&auto=format&fit=crop')" }} />
+      <div className="absolute inset-0 pointer-events-none grid-bg opacity-10" />
       <SEO title="Login Verification" path="/login-otp" />
       <div className="absolute top-5 left-6">
         <Link href="/login" className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-orange-500 transition-colors">
@@ -105,6 +113,9 @@ export default function LoginOtp() {
                 onKeyDown={(e) => handleKeyDown(i, e)}
                 inputMode="numeric"
                 maxLength={1}
+                  autoFocus={i === 0}
+                  autoComplete={i === 0 ? 'one-time-code' : 'off'}
+                  aria-label={`Login verification code digit ${i + 1}`}
                 className="w-11 h-13 sm:w-12 sm:h-14 text-center text-xl font-bold bg-muted/50 border border-border rounded-xl focus:outline-none focus:border-orange-500 focus:bg-background transition-all"
               />
             ))}

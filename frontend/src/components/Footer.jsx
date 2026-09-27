@@ -149,8 +149,8 @@ export default function Footer() {
                 </a>
               </li>
               <li>
-                <a href="tel:+917338078795" className="hover:text-orange-500 transition-colors">
-                  +91 7338078795
+                <a href={`tel:${COMPANY.phone.replace(/\D/g, '')}`} className="hover:text-orange-500 transition-colors">
+                  {COMPANY.phone}
                 </a>
               </li>
             </ul>

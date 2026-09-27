@@ -27,7 +27,7 @@ export default function NotFound() {
           <Logo size={36} />
           <div className="text-left">
             <p className="font-bold text-sm leading-none">JASKRON</p>
-            <p className="text-[10px] text-orange-500 uppercase tracking-widest">Jaskron Technologies PVT LTD</p>
+            <p className="text-[10px] text-orange-500 uppercase tracking-widest">Technologies PVT LTD</p>
           </div>
         </Link>
 

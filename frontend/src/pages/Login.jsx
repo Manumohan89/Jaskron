@@ -50,10 +50,18 @@ export default function Login() {
       if (!form.agreeTerms) { setError('Please agree to the Terms & Privacy Policy to continue'); setIsSubmitting(false); return; }
 
       const registeredUser = await register(form.name, form.email, form.password, { phone: form.phone, organization: form.organization });
+      if (registeredUser?.pendingVerification) {
+        navigate(`/verify-email?email=${encodeURIComponent(registeredUser.email)}`);
+        return;
+      }
       if (registeredUser?.role === 'admin') navigate('/admin');
       else navigate('/dashboard');
     } catch (err) {
       const data = err.response?.data;
+        if (data?.code === 'EMAIL_NOT_VERIFIED' && data.email) {
+          navigate(`/verify-email?email=${encodeURIComponent(data.email)}`);
+          return;
+        }
       setError(data?.message || data?.error || 'Something went wrong');
     }
     setIsSubmitting(false);

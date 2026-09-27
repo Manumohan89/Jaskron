@@ -34,25 +34,14 @@ export default function CertificateTemplate({
     ? new Date(issueDate).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })
     : new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
 
-  const g = (grade || '').toLowerCase();
-  const isTop = g.includes('distinction') || g.includes('merit') || g.includes('excellent');
-  const pillColor = isTop ? '#34d399' : '#F2721F';
+  const pillColor = '#F2721F';
 
   const programPhrase =
     programType === 'internship' ? 'internship program' : programType === 'workshop' ? 'workshop' : 'training program';
   const completionSentence = `has successfully completed the ${durationLabel ? `${durationLabel} ` : ''}${programPhrase}`;
 
-  // Grade pill widens to fit score/attendance when those are present, without
-  // disturbing anything else in the layout.
-  const pillParts = [`GRADE: ${(grade || 'PASS').toUpperCase()}`];
-  if (performanceScore !== undefined && performanceScore !== null && performanceScore !== '') {
-    pillParts.push(`SCORE: ${Math.round(Number(performanceScore))}%`);
-  }
-  if (attendancePercent !== undefined && attendancePercent !== null && attendancePercent !== '') {
-    pillParts.push(`ATTENDANCE: ${Math.round(Number(attendancePercent))}%`);
-  }
-  const pillText = pillParts.join('   •   ');
-  const pillWidth = Math.min(860, Math.max(144, pillText.length * 7.4));
+  const pillText = 'CERTIFICATE OF COMPLETION';
+  const pillWidth = 250;
 
   const remarksLine = mentorRemarks
     ? `“${mentorRemarks.length > 110 ? `${mentorRemarks.slice(0, 107)}…` : mentorRemarks}”`
@@ -153,7 +142,7 @@ export default function CertificateTemplate({
         {courseTitle}
       </text>
 
-      {/* Grade pill — widens to include score/attendance when the certificate carries them */}
+      {/* Completion label; performance metadata is intentionally not printed. */}
       <g transform="translate(500,444)">
         <rect x={-pillWidth / 2} y="-16" width={pillWidth} height="32" rx="16" fill={pillColor} fillOpacity="0.12" stroke={pillColor} strokeOpacity="0.5" />
         <text x="0" y="5" textAnchor="middle" fill={pillColor} fontSize="13" fontWeight="700" letterSpacing="1.5" fontFamily="Arial, sans-serif">

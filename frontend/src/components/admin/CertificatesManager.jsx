@@ -3,6 +3,8 @@ import { motion, AnimatePresence } from 'framer-motion';
 import axios from 'axios';
 import { Award, Plus, X, Loader2, Eye, Ban, Search } from 'lucide-react';
 import CertificateModal from '../CertificateModal';
+import { courseApi } from '@/services/courseService';
+import { toast } from 'sonner';
 
 const API_URL = import.meta.env?.VITE_API_URL || 'http://localhost:5000';
 const GRADES = ['Pass', 'Merit', 'Distinction'];
@@ -14,6 +16,8 @@ export default function CertificatesManager({ headers, users, prefill, onPrefill
   const [saving, setSaving] = useState(false);
   const [preview, setPreview] = useState(null);
   const [userQuery, setUserQuery] = useState('');
+  const [courses, setCourses] = useState([]);
+  const [selectedUserIds, setSelectedUserIds] = useState([]);
   const [form, setForm] = useState({
     userId: '', courseTitle: '', grade: 'Pass', issuedBy: 'JASKRON Technologies Pvt. Ltd.',
     performanceScore: '', attendancePercent: '', durationLabel: '', mentorRemarks: ''
@@ -25,6 +29,7 @@ export default function CertificatesManager({ headers, users, prefill, onPrefill
 
   useEffect(() => {
     fetchCertificates(1);
+    courseApi.adminGetAll().then(setCourses).catch(() => setCourses([]));
   }, []);
 
   useEffect(() => {
@@ -34,8 +39,10 @@ export default function CertificatesManager({ headers, users, prefill, onPrefill
 
   useEffect(() => {
     if (prefill) {
+      setSelectedUserIds(prefill.userId ? [prefill.userId] : []);
       setForm({
         userId: prefill.userId || '',
+        courseId: prefill.courseId || '',
         courseTitle: prefill.courseTitle || '',
         grade: 'Pass',
         issuedBy: 'JASKRON Technologies Pvt. Ltd.',
@@ -65,19 +72,30 @@ export default function CertificatesManager({ headers, users, prefill, onPrefill
 
   const handleIssue = async (e) => {
     e.preventDefault();
-    if (!form.userId) return alert('Please select a recipient');
+    if (!selectedUserIds.length) return alert('Please select at least one recipient');
+    if (!form.courseId && !form.courseTitle) return alert('Please select a course');
     setSaving(true);
     try {
-      const payload = { ...form };
+      const payload = { ...form, userId: selectedUserIds[0] };
+      delete payload.userIds;
       if (payload.performanceScore === '') delete payload.performanceScore;
       if (payload.attendancePercent === '') delete payload.attendancePercent;
-      const res = await axios.post(`${API_URL}/api/certificates`, payload, { headers });
+      const recipientCount = selectedUserIds.length;
+      let emailsSent = 0;
+      for (const userId of selectedUserIds) {
+        // eslint-disable-next-line no-await-in-loop
+        const response = await axios.post(`${API_URL}/api/certificates`, { ...payload, userId }, { headers });
+        if (response.data.emailSent) emailsSent += 1;
+      }
       fetchCertificates(1);
       setShowForm(false);
+      setSelectedUserIds([]);
       setForm({
-        userId: '', courseTitle: '', grade: 'Pass', issuedBy: 'JASKRON Technologies Pvt. Ltd.',
+        userId: '', courseId: '', courseTitle: '', grade: 'Pass', issuedBy: 'JASKRON Technologies Pvt. Ltd.',
         performanceScore: '', attendancePercent: '', durationLabel: '', mentorRemarks: ''
       });
+      if (emailsSent === recipientCount) toast.success(`${recipientCount} certificate(s) issued and emailed`);
+      else toast.warning(`${recipientCount} certificate(s) issued, but email delivery is not configured or failed`);
     } catch (err) {
       alert(err.response?.data?.error || 'Failed to issue certificate');
     }
@@ -95,6 +113,8 @@ export default function CertificatesManager({ headers, users, prefill, onPrefill
   const filteredUsers = (users || []).filter(
     (u) => u.name?.toLowerCase().includes(userQuery.toLowerCase()) || u.email?.toLowerCase().includes(userQuery.toLowerCase())
   );
+
+  const toggleUser = (userId) => setSelectedUserIds((ids) => ids.includes(userId) ? ids.filter((id) => id !== userId) : [...ids, userId]);
 
   const gradeColor = {
     Pass: 'bg-gray-700 text-gray-300',
@@ -140,7 +160,6 @@ export default function CertificatesManager({ headers, users, prefill, onPrefill
               <tr className="border-b border-gray-800/60 text-left text-xs text-gray-500 uppercase tracking-wide">
                 <th className="px-4 py-3">Recipient</th>
                 <th className="px-4 py-3">Course</th>
-                <th className="px-4 py-3">Grade</th>
                 <th className="px-4 py-3">Issued</th>
                 <th className="px-4 py-3">Certificate ID</th>
                 <th className="px-4 py-3 text-right">Actions</th>
@@ -154,9 +173,6 @@ export default function CertificatesManager({ headers, users, prefill, onPrefill
                     <p className="text-xs text-gray-500">{c.user?.email}</p>
                   </td>
                   <td className="px-4 py-3 text-sm text-gray-300">{c.courseTitle}</td>
-                  <td className="px-4 py-3">
-                    <span className={`text-[11px] font-semibold px-2 py-0.5 rounded-full ${gradeColor[c.grade]}`}>{c.grade}</span>
-                  </td>
                   <td className="px-4 py-3 text-sm text-gray-500">{new Date(c.issueDate).toLocaleDateString()}</td>
                   <td className="px-4 py-3 text-xs font-mono text-gray-500">{c.certificateId}</td>
                   <td className="px-4 py-3 text-right">
@@ -218,18 +234,8 @@ export default function CertificatesManager({ headers, users, prefill, onPrefill
               <div className="space-y-4">
                 <div>
                   <label className="text-xs font-medium text-gray-400 mb-1.5 block">Recipient</label>
-                  {form.userId && (
-                    <div className="flex items-center justify-between bg-orange-500/10 border border-orange-500/30 rounded-xl px-3 py-2.5 mb-2">
-                      <span className="text-sm text-orange-400">
-                        {users?.find((u) => u._id === form.userId)?.name || 'Selected user'}
-                      </span>
-                      <button type="button" onClick={() => setForm({ ...form, userId: '' })} className="text-orange-500 text-xs">
-                        Change
-                      </button>
-                    </div>
-                  )}
-                  {!form.userId && (
-                    <>
+                  {selectedUserIds.length > 0 && <p className="text-xs text-orange-400 mb-2">{selectedUserIds.length} recipient(s) selected</p>}
+                  <>
                       <div className="relative mb-2">
                         <Search className="w-3.5 h-3.5 text-gray-500 absolute left-3 top-1/2 -translate-y-1/2" />
                         <input
@@ -247,45 +253,32 @@ export default function CertificatesManager({ headers, users, prefill, onPrefill
                             <button
                               type="button"
                               key={u._id}
-                              onClick={() => setForm({ ...form, userId: u._id })}
-                              className="w-full text-left px-2.5 py-2 rounded-lg hover:bg-orange-500/10 transition-colors"
+                              onClick={() => toggleUser(u._id)}
+                              className={`w-full text-left px-2.5 py-2 rounded-lg hover:bg-orange-500/10 transition-colors ${selectedUserIds.includes(u._id) ? 'bg-orange-500/10' : ''}`}
                             >
-                              <p className="text-sm text-white">{u.name}</p>
+                              <p className="text-sm text-white">{selectedUserIds.includes(u._id) ? '✓ ' : ''}{u.name}</p>
                               <p className="text-xs text-gray-500">{u.email}</p>
                             </button>
                           ))
                         )}
                       </div>
-                    </>
-                  )}
+                  </>
                 </div>
 
                 <div>
-                  <label className="text-xs font-medium text-gray-400 mb-1.5 block">Course / Achievement Title</label>
-                  <input
+                  <label className="text-xs font-medium text-gray-400 mb-1.5 block">Course</label>
+                  <select
                     required
-                    value={form.courseTitle}
-                    onChange={(e) => setForm({ ...form, courseTitle: e.target.value })}
+                    value={form.courseId}
+                    onChange={(e) => setForm({ ...form, courseId: e.target.value, courseTitle: '' })}
                     className="w-full bg-[#161616] border border-gray-800 rounded-xl px-3 py-2.5 text-sm text-white focus:outline-none focus:border-orange-500"
-                    placeholder="Ethical Hacking Fundamentals"
-                  />
+                  >
+                    <option value="">Select the offered course</option>
+                    {courses.map((course) => <option key={course._id} value={course._id}>{course.title}</option>)}
+                  </select>
                 </div>
 
                 <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <label className="text-xs font-medium text-gray-400 mb-1.5 block">Grade</label>
-                    <select
-                      value={form.grade}
-                      onChange={(e) => setForm({ ...form, grade: e.target.value })}
-                      className="w-full bg-[#161616] border border-gray-800 rounded-xl px-3 py-2.5 text-sm text-white focus:outline-none focus:border-orange-500"
-                    >
-                      {GRADES.map((g) => (
-                        <option key={g} value={g}>
-                          {g}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
                   <div>
                     <label className="text-xs font-medium text-gray-400 mb-1.5 block">Issued By</label>
                     <input

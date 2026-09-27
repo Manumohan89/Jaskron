@@ -13,11 +13,8 @@ function hashOtp(otp) {
   return crypto.createHash('sha256').update(otp).digest('hex');
 }
 
-// New-account signups log straight in — no OTP step, in every environment.
-// This only affects registration/email verification; it is intentionally
-// separate from admin login 2FA below, which still emails a login code.
 function otpBypassEnabled() {
-  return true;
+  return process.env.NODE_ENV !== 'production' && process.env.SKIP_EMAIL_VERIFICATION === 'true';
 }
 
 // Issues a fresh access+refresh token pair AND records the session server-side
@@ -39,9 +36,6 @@ async function issueTokensWithSession(user, req) {
   return { token, refreshToken };
 }
 
-// Registration: create the account, mark it verified immediately, and log
-// the user straight in with tokens — no OTP step. A welcome email still goes
-// out, but it's informational, not a gate.
 export const register = async (req, res) => {
   try {
     const { name, email, password, phone, organization } = req.body;
@@ -51,20 +45,36 @@ export const register = async (req, res) => {
       if (existing.emailVerified) {
         return res.status(400).json({ message: 'Email already registered' });
       }
-      // A row left over from before this change (created but never verified).
-      // Finish it off the same way a fresh signup would.
-      existing.emailVerified = true;
       existing.name = name || existing.name;
       if (password) existing.password = password;
-      existing.lastLogin = new Date();
-      const { token, refreshToken } = await issueTokensWithSession(existing, req);
-      return res.status(200).json({
-        token, refreshToken,
-        user: { id: existing._id, name: existing.name, email: existing.email, role: existing.role }
-      });
+      if (otpBypassEnabled()) {
+        existing.emailVerified = true;
+        existing.lastLogin = new Date();
+        const { token, refreshToken } = await issueTokensWithSession(existing, req);
+        return res.status(200).json({ token, refreshToken, user: { id: existing._id, name: existing.name, email: existing.email, role: existing.role } });
+      }
+      const otp = generateOtp();
+      existing.emailVerified = false;
+      existing.otpCodeHash = hashOtp(otp);
+      existing.otpExpires = new Date(Date.now() + 10 * 60 * 1000);
+      existing.otpAttempts = 0;
+      await existing.save();
+      await sendMail({ to: existing.email, subject: 'Verify your email — JASKRON Technologies Pvt. Ltd.', html: otpVerificationEmail(existing.name, otp) });
+      return res.status(200).json({ pendingVerification: true, email: existing.email });
     }
 
-    const user = new User({ name, email, password, phone, organization, emailVerified: true });
+    const otp = generateOtp();
+    const user = new User({
+      name, email, password, phone, organization,
+      emailVerified: otpBypassEnabled(),
+      otpCodeHash: otpBypassEnabled() ? undefined : hashOtp(otp),
+      otpExpires: otpBypassEnabled() ? undefined : new Date(Date.now() + 10 * 60 * 1000)
+    });
+    if (!otpBypassEnabled()) {
+      await user.save();
+      await sendMail({ to: user.email, subject: 'Verify your email — JASKRON Technologies Pvt. Ltd.', html: otpVerificationEmail(user.name, otp) });
+      return res.status(201).json({ pendingVerification: true, email: user.email });
+    }
     user.lastLogin = new Date();
     await user.save();
     sendMail({ to: user.email, subject: 'Welcome to JASKRON Technologies Pvt. Ltd.', html: welcomeEmail(user.name) });
@@ -133,7 +143,7 @@ export const resendOtp = async (req, res) => {
     user.otpExpires = new Date(Date.now() + 10 * 60 * 1000);
     user.otpAttempts = 0;
     await user.save();
-    sendMail({ to: user.email, subject: 'Your new verification code — JASKRON Technologies Pvt. Ltd.', html: otpVerificationEmail(user.name, otp) });
+    await sendMail({ to: user.email, subject: 'Your new verification code — JASKRON Technologies Pvt. Ltd.', html: otpVerificationEmail(user.name, otp) });
     res.json({ message: 'If a pending registration exists for this email, a new code has been sent.' });
   } catch (err) {
     res.status(500).json({ message: err.message });
@@ -153,7 +163,17 @@ export const login = async (req, res) => {
     // trip for accounts created going forward — kept only for any pre-existing
     // unverified rows from before this change.
     if (!user.emailVerified && !otpBypassEnabled()) {
-      return res.status(403).json({ message: 'Please verify your email before logging in.', code: 'EMAIL_NOT_VERIFIED', email: user.email });
+      const otp = generateOtp();
+      user.otpCodeHash = hashOtp(otp);
+      user.otpExpires = new Date(Date.now() + 10 * 60 * 1000);
+      user.otpAttempts = 0;
+      await user.save();
+      try {
+        await sendMail({ to: user.email, subject: 'Verify your email — JASKRON Technologies Pvt. Ltd.', html: otpVerificationEmail(user.name, otp) });
+      } catch (mailError) {
+        return res.status(503).json({ message: mailError.message, code: 'EMAIL_SEND_FAILED', email: user.email });
+      }
+      return res.status(403).json({ message: 'A verification code has been sent to your email.', code: 'EMAIL_NOT_VERIFIED', email: user.email });
     }
     if (!user.isActive) return res.status(403).json({ message: 'Account deactivated' });
 
