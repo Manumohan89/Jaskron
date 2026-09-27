@@ -14,16 +14,24 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 async function startServer() {
   const app = express();
 
-  // Allow multiple comma-separated origins via CORS_ORIGIN env var
-  // e.g. CORS_ORIGIN=https://your-app.vercel.app,http://localhost:3000
-  const allowedOrigins = (process.env.CORS_ORIGIN || "http://localhost:3000")
+  // Allow multiple comma-separated origins via CORS_ORIGIN env var.
+  // Keep the canonical production domains available even if the Render
+  // environment variable has not been configured yet.
+  const configuredOrigins = (process.env.CORS_ORIGIN || "")
     .split(",")
-    .map((o) => o.trim());
+    .map((o) => o.trim())
+    .filter(Boolean);
+  const allowedOrigins = [
+    "http://localhost:3000",
+    "https://jaskron.com",
+    "https://www.jaskron.com",
+    ...configuredOrigins,
+  ];
 
   app.use(
     cors({
       origin: (origin, callback) => {
-        if (!origin || allowedOrigins.includes(origin) || allowedOrigins.includes("*")) {
+        if (!origin || allowedOrigins.includes(origin)) {
           callback(null, true);
         } else {
           callback(new Error("Not allowed by CORS"));
