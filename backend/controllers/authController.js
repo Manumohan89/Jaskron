@@ -76,13 +76,13 @@ export const register = async (req, res) => {
       otpExpires: otpBypassEnabled() ? undefined : new Date(Date.now() + 10 * 60 * 1000)
     });
     if (!otpBypassEnabled()) {
+      await user.save();
       try {
         await sendMail({ to: user.email, subject: 'Verify your email — JASKRON Technologies Pvt. Ltd.', html: otpVerificationEmail(user.name, otp) });
       } catch (mailError) {
         console.error('Verification email failed for new user:', mailError);
         return res.status(503).json({ message: 'We could not send the verification email. Please try again later.', code: 'EMAIL_SEND_FAILED', email: user.email });
       }
-      await user.save();
       return res.status(201).json({ pendingVerification: true, email: user.email });
     }
     user.lastLogin = new Date();
