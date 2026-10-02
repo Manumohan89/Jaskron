@@ -58,7 +58,7 @@ export const register = async (req, res) => {
         await sendMail({ to: existing.email, subject: 'Verify your email — JASKRON Technologies Pvt. Ltd.', html: otpVerificationEmail(existing.name, otp) });
       } catch (mailError) {
         console.error('Verification email failed for existing user:', mailError);
-        return res.status(503).json({ message: 'We could not send the verification email. Please try again later.', code: 'EMAIL_SEND_FAILED', email: existing.email });
+        return res.status(202).json({ pendingVerification: true, email: existing.email, message: 'Verification email may be delayed. Check your inbox or request a new code.' });
       }
       existing.emailVerified = false;
       existing.otpCodeHash = hashOtp(otp);
@@ -81,7 +81,7 @@ export const register = async (req, res) => {
         await sendMail({ to: user.email, subject: 'Verify your email — JASKRON Technologies Pvt. Ltd.', html: otpVerificationEmail(user.name, otp) });
       } catch (mailError) {
         console.error('Verification email failed for new user:', mailError);
-        return res.status(503).json({ message: 'We could not send the verification email. Please try again later.', code: 'EMAIL_SEND_FAILED', email: user.email });
+        return res.status(202).json({ pendingVerification: true, email: user.email, message: 'Verification email may be delayed. Check your inbox or request a new code.' });
       }
       return res.status(201).json({ pendingVerification: true, email: user.email });
     }
