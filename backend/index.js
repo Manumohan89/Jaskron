@@ -13,6 +13,9 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 async function startServer() {
   const app = express();
+  // Render terminates TLS at a proxy and forwards the client IP in
+  // X-Forwarded-For. Trust the single proxy hop so rate limiting uses real IPs.
+  app.set("trust proxy", 1);
 
   // Allow multiple comma-separated origins via CORS_ORIGIN env var.
   // Keep the canonical production domains available even if the Render
