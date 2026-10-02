@@ -12,15 +12,18 @@ const logoCid = 'jaskron-logo';
 let transporter = null;
 function getTransporter() {
   if (transporter) return transporter;
-  if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
+  const emailUser = process.env.EMAIL_USER?.trim();
+  const emailPass = process.env.EMAIL_PASS?.trim();
+  if (!emailUser || !emailPass) {
     return null;
   }
-  const emailUser = process.env.EMAIL_USER.trim();
-  const emailPass = process.env.EMAIL_PASS.trim();
   const smtpPort = Number(process.env.SMTP_PORT || 465);
-  const smtpSecure = String(process.env.SMTP_SECURE ?? smtpPort === 465).toLowerCase() === 'true';
+  if (!Number.isInteger(smtpPort) || smtpPort < 1 || smtpPort > 65535) {
+    throw new Error('SMTP_PORT must be a valid TCP port number.');
+  }
+  const smtpSecure = String(process.env.SMTP_SECURE ?? (smtpPort === 465)).trim().toLowerCase() === 'true';
   transporter = nodemailer.createTransport({
-    host: process.env.SMTP_HOST || 'smtpout.secureserver.net',
+    host: process.env.SMTP_HOST?.trim() || 'smtpout.secureserver.net',
     port: smtpPort,
     secure: smtpSecure,
     requireTLS: !smtpSecure,

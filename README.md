@@ -108,6 +108,11 @@ admin credentials above and visit `/admin`.
      [mongodb.com/atlas](https://www.mongodb.com/atlas) if you don't have one)
    - `NODE_ENV` = `production`
    - `JWT_SECRET` — a long random string
+   - `EMAIL_USER` and `EMAIL_PASS` — the GoDaddy mailbox credentials used to send OTPs
+   - `EMAIL_FROM` — a sender address authorized by that mailbox, for example
+     `JASKRON Technologies Pvt. Ltd. <contact@jaskron.com>`
+   - `SMTP_HOST` = `smtpout.secureserver.net`, `SMTP_PORT` = `465`,
+     `SMTP_SECURE` = `true`
    - `CORS_ORIGIN` — your Vercel frontend URL once you have it, comma-separated if
      you need more than one, e.g. `https://your-app.vercel.app`
 5. Deploy. Once live, note your backend URL, e.g.
