@@ -153,7 +153,12 @@ export const resendOtp = async (req, res) => {
     user.otpExpires = new Date(Date.now() + 10 * 60 * 1000);
     user.otpAttempts = 0;
     await user.save();
-    await sendMail({ to: user.email, subject: 'Your new verification code — JASKRON Technologies Pvt. Ltd.', html: otpVerificationEmail(user.name, otp) });
+    try {
+      await sendMail({ to: user.email, subject: 'Your new verification code — JASKRON Technologies Pvt. Ltd.', html: otpVerificationEmail(user.name, otp) });
+    } catch (mailError) {
+      console.error('Verification email resend failed:', mailError);
+      return res.status(202).json({ pendingVerification: true, email: user.email, message: 'Verification email may be delayed. Check your inbox or request a new code.' });
+    }
     res.json({ message: 'If a pending registration exists for this email, a new code has been sent.' });
   } catch (err) {
     res.status(500).json({ message: err.message });
